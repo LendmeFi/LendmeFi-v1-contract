@@ -10,17 +10,25 @@ contract EIP712SignMessage is EIP712, Nonces {
     string private constant SIGNATURE_VERSION = "1";
 
     struct BorrowerData {
-        address borrower;
-        uint256 tokenId;
-        uint256 amount;
-        uint256 nonce;
+        address borrowerAddress;
+        uint256 borrowerNonce;
+        address nftColletaralAddress;
+        uint256 nftTokenId;
+        address loanTokenAddress;
+        uint256 loanAmount;
+        uint256 repaymentAmount;
+        uint256 loanDuration;
     }
 
     struct LenderData {
-        address lender;
-        uint256 tokenId;
-        uint256 amount;
-        uint256 nonce;
+        address lenderAddress;
+        uint256 lenderNonce;
+        address nftColletaralAddress;
+        uint256 nftTokenId;
+        address loanTokenAddress;
+        uint256 loanAmount;
+        uint256 repaymentAmount;
+        uint256 loanDuration;
     }
 
     constructor() EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {}
@@ -33,12 +41,16 @@ contract EIP712SignMessage is EIP712, Nonces {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "BorrowerData(address borrower,uint256 tokenId,uint256 amount,uint256 nonce)"
+                            "BorrowerData(address borrowerAddress,uint256 borrowerNonce,address nftColletaralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 repaymentAmount,uint256 loanDuration)"
                         ),
-                        data.borrower,
-                        data.tokenId,
-                        data.amount,
-                        data.nonce
+                        data.borrowerAddress,
+                        data.borrowerNonce,
+                        data.nftColletaralAddress,
+                        data.nftTokenId,
+                        data.loanTokenAddress,
+                        data.loanAmount,
+                        data.repaymentAmount,
+                        data.loanDuration
                     )
                 )
             );
@@ -52,12 +64,16 @@ contract EIP712SignMessage is EIP712, Nonces {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "LenderData(address lender,uint256 tokenId,uint256 amount,uint256 nonce)"
+                            "LenderData(address lenderAddress,uint256 lenderNonce,address nftColletaralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 repaymentAmount,uint256 loanDuration)"
                         ),
-                        data.lender,
-                        data.tokenId,
-                        data.amount,
-                        data.nonce
+                        data.lenderAddress,
+                        data.lenderNonce,
+                        data.nftColletaralAddress,
+                        data.nftTokenId,
+                        data.loanTokenAddress,
+                        data.loanAmount,
+                        data.repaymentAmount,
+                        data.loanDuration
                     )
                 )
             );
@@ -67,10 +83,14 @@ contract EIP712SignMessage is EIP712, Nonces {
         BorrowerData memory data,
         bytes memory signature
     ) public view returns (bool) {
+        require(
+            data.borrowerNonce == nonces(data.borrowerAddress),
+            "Invalid nonce"
+        );
         bytes32 messageHash = getBorrowerMessageHash(data);
         return
             SignatureChecker.isValidSignatureNow(
-                data.borrower,
+                data.borrowerAddress,
                 messageHash,
                 signature
             );
@@ -80,10 +100,14 @@ contract EIP712SignMessage is EIP712, Nonces {
         LenderData memory data,
         bytes memory signature
     ) public view returns (bool) {
+        require(
+            data.lenderNonce == nonces(data.lenderAddress),
+            "Invalid nonce"
+        );
         bytes32 messageHash = getLenderMessageHash(data);
         return
             SignatureChecker.isValidSignatureNow(
-                data.lender,
+                data.lenderAddress,
                 messageHash,
                 signature
             );
@@ -94,7 +118,7 @@ contract EIP712SignMessage is EIP712, Nonces {
         bytes memory signature
     ) public {
         require(isValidBorrowerSignature(data, signature), "Invalid signature");
-        _useNonce(data.borrower);
+        _useNonce(data.borrowerAddress);
     }
 
     function executeLenderTransaction(
@@ -102,7 +126,7 @@ contract EIP712SignMessage is EIP712, Nonces {
         bytes memory signature
     ) public {
         require(isValidLenderSignature(data, signature), "Invalid signature");
-        _useNonce(data.lender);
+        _useNonce(data.lenderAddress);
     }
 
     function nonces(address owner) public view override returns (uint256) {
