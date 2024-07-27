@@ -30,7 +30,7 @@ contract EIP712SignMessage is EIP712{
         uint256 loanDuration;
     }
 
-    mapping(address => mapping(uint256 => bool)) private isNonceUsed;
+    mapping(address => mapping(uint256 => bool)) private isNonceUsed; //false by default
 
     constructor() EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {}
 
