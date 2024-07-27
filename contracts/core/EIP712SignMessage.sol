@@ -12,7 +12,7 @@ contract EIP712SignMessage is EIP712, Nonces {
     struct BorrowerData {
         address borrowerAddress;
         uint256 borrowerNonce;
-        address nftColletaralAddress;
+        address nftCollateralAddress;
         uint256 nftTokenId;
         address loanTokenAddress;
         uint256 loanAmount;
@@ -23,13 +23,15 @@ contract EIP712SignMessage is EIP712, Nonces {
     struct LenderData {
         address lenderAddress;
         uint256 lenderNonce;
-        address nftColletaralAddress;
+        address nftCollateralAddress;
         uint256 nftTokenId;
         address loanTokenAddress;
         uint256 loanAmount;
         uint256 repaymentAmount;
         uint256 loanDuration;
     }
+
+    event NonceUsed(address indexed user, uint256 nonce);
 
     constructor() EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {}
 
@@ -41,11 +43,11 @@ contract EIP712SignMessage is EIP712, Nonces {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "BorrowerData(address borrowerAddress,uint256 borrowerNonce,address nftColletaralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 repaymentAmount,uint256 loanDuration)"
+                            "BorrowerData(address borrowerAddress,uint256 borrowerNonce,address nftCollateralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 repaymentAmount,uint256 loanDuration)"
                         ),
                         data.borrowerAddress,
                         data.borrowerNonce,
-                        data.nftColletaralAddress,
+                        data.nftCollateralAddress,
                         data.nftTokenId,
                         data.loanTokenAddress,
                         data.loanAmount,
@@ -64,11 +66,11 @@ contract EIP712SignMessage is EIP712, Nonces {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "LenderData(address lenderAddress,uint256 lenderNonce,address nftColletaralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 repaymentAmount,uint256 loanDuration)"
+                            "LenderData(address lenderAddress,uint256 lenderNonce,address nftCollateralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 repaymentAmount,uint256 loanDuration)"
                         ),
                         data.lenderAddress,
                         data.lenderNonce,
-                        data.nftColletaralAddress,
+                        data.nftCollateralAddress,
                         data.nftTokenId,
                         data.loanTokenAddress,
                         data.loanAmount,
@@ -79,7 +81,7 @@ contract EIP712SignMessage is EIP712, Nonces {
             );
     }
 
-    function isValidBorrowerSignature(
+    function verifyBorrowerSignature(
         BorrowerData memory data,
         bytes memory signature
     ) public view returns (bool) {
@@ -96,7 +98,7 @@ contract EIP712SignMessage is EIP712, Nonces {
             );
     }
 
-    function isValidLenderSignature(
+    function verifyLenderSignature(
         LenderData memory data,
         bytes memory signature
     ) public view returns (bool) {
@@ -117,7 +119,8 @@ contract EIP712SignMessage is EIP712, Nonces {
         BorrowerData memory data,
         bytes memory signature
     ) public {
-        require(isValidBorrowerSignature(data, signature), "Invalid signature");
+        require(verifyBorrowerSignature(data, signature), "Invalid signature");
+        emit NonceUsed(data.borrowerAddress, data.borrowerNonce);
         _useNonce(data.borrowerAddress);
     }
 
@@ -125,7 +128,8 @@ contract EIP712SignMessage is EIP712, Nonces {
         LenderData memory data,
         bytes memory signature
     ) public {
-        require(isValidLenderSignature(data, signature), "Invalid signature");
+        require(verifyLenderSignature(data, signature), "Invalid signature");
+        emit NonceUsed(data.lenderAddress, data.lenderNonce);
         _useNonce(data.lenderAddress);
     }
 
