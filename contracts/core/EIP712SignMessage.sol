@@ -84,10 +84,6 @@ contract EIP712SignMessage is EIP712{
         BorrowerData memory data,
         bytes memory signature
     ) public view returns (bool) {
-        require(
-            !isNonceUsed[data.borrowerAddress][data.borrowerNonce],
-            "Borrower nonce already used"
-        );
         bytes32 messageHash = getBorrowerMessageHash(data);
         return
             SignatureChecker.isValidSignatureNow(
@@ -101,10 +97,6 @@ contract EIP712SignMessage is EIP712{
         LenderData memory data,
         bytes memory signature
     ) public view returns (bool) {
-        require(
-            !isNonceUsed[data.lenderAddress][data.lenderNonce],
-            "Lender nonce already used"
-        );
         bytes32 messageHash = getLenderMessageHash(data);
         return
             SignatureChecker.isValidSignatureNow(
@@ -114,9 +106,14 @@ contract EIP712SignMessage is EIP712{
             );
     }
 
-    function markNonceAsUsed(address user, uint256 nonce) internal returns (bool) {
+    function _markNonceAsUsed(address user, uint256 nonce) internal returns (bool) {
+        require(!isNonceUsed[user][nonce], "Nonce already used");
         isNonceUsed[user][nonce] = true;
         return true;
+    }
+
+    function _isNonceUsed(address user, uint256 nonce) internal view returns (bool) {
+        return isNonceUsed[user][nonce];
     }
 
 }
