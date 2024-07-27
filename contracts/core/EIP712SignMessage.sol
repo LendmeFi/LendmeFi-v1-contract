@@ -3,9 +3,8 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import "@openzeppelin/contracts/utils/Nonces.sol";
 
-contract EIP712SignMessage is EIP712, Nonces {
+contract EIP712SignMessage is EIP712{
     string private constant SIGNING_DOMAIN = "LendmeFi";
     string private constant SIGNATURE_VERSION = "1";
 
@@ -31,7 +30,7 @@ contract EIP712SignMessage is EIP712, Nonces {
         uint256 loanDuration;
     }
 
-    event NonceUsed(address indexed user, uint256 nonce);
+    mapping(address => mapping(uint256 => bool)) private isNonceUsed;
 
     constructor() EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {}
 
@@ -86,8 +85,8 @@ contract EIP712SignMessage is EIP712, Nonces {
         bytes memory signature
     ) public view returns (bool) {
         require(
-            data.borrowerNonce == nonces(data.borrowerAddress),
-            "Invalid nonce"
+            !isNonceUsed[data.borrowerAddress][data.borrowerNonce],
+            "Borrower nonce already used"
         );
         bytes32 messageHash = getBorrowerMessageHash(data);
         return
@@ -103,8 +102,8 @@ contract EIP712SignMessage is EIP712, Nonces {
         bytes memory signature
     ) public view returns (bool) {
         require(
-            data.lenderNonce == nonces(data.lenderAddress),
-            "Invalid nonce"
+            !isNonceUsed[data.lenderAddress][data.lenderNonce],
+            "Lender nonce already used"
         );
         bytes32 messageHash = getLenderMessageHash(data);
         return
@@ -115,29 +114,9 @@ contract EIP712SignMessage is EIP712, Nonces {
             );
     }
 
-    function executeBorrowerTransaction(
-        BorrowerData memory data,
-        bytes memory signature
-    ) public {
-        require(verifyBorrowerSignature(data, signature), "Invalid signature");
-        emit NonceUsed(data.borrowerAddress, data.borrowerNonce);
-        _useNonce(data.borrowerAddress);
+    function markNonceAsUsed(address user, uint256 nonce) internal returns (bool) {
+        isNonceUsed[user][nonce] = true;
+        return true;
     }
 
-    function executeLenderTransaction(
-        LenderData memory data,
-        bytes memory signature
-    ) public {
-        require(verifyLenderSignature(data, signature), "Invalid signature");
-        emit NonceUsed(data.lenderAddress, data.lenderNonce);
-        _useNonce(data.lenderAddress);
-    }
-
-    function nonces(address owner) public view override returns (uint256) {
-        return super.nonces(owner);
-    }
-
-    function _useNonce(address owner) internal override returns (uint256) {
-        return super._useNonce(owner);
-    }
 }
