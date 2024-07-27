@@ -15,7 +15,7 @@ contract EIP712SignMessage is EIP712{
         uint256 nftTokenId;
         address loanTokenAddress;
         uint256 loanAmount;
-        uint256 repaymentAmount;
+        uint256 interestFee;
         uint256 loanDuration;
     }
 
@@ -26,7 +26,7 @@ contract EIP712SignMessage is EIP712{
         uint256 nftTokenId;
         address loanTokenAddress;
         uint256 loanAmount;
-        uint256 repaymentAmount;
+        uint256 interestFee;
         uint256 loanDuration;
     }
 
@@ -42,7 +42,7 @@ contract EIP712SignMessage is EIP712{
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "BorrowerData(address borrowerAddress,uint256 borrowerNonce,address nftCollateralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 repaymentAmount,uint256 loanDuration)"
+                            "BorrowerData(address borrowerAddress,uint256 borrowerNonce,address nftCollateralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 interestFee,uint256 loanDuration)"
                         ),
                         data.borrowerAddress,
                         data.borrowerNonce,
@@ -50,7 +50,7 @@ contract EIP712SignMessage is EIP712{
                         data.nftTokenId,
                         data.loanTokenAddress,
                         data.loanAmount,
-                        data.repaymentAmount,
+                        data.interestFee,
                         data.loanDuration
                     )
                 )
@@ -65,7 +65,7 @@ contract EIP712SignMessage is EIP712{
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "LenderData(address lenderAddress,uint256 lenderNonce,address nftCollateralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 repaymentAmount,uint256 loanDuration)"
+                            "LenderData(address lenderAddress,uint256 lenderNonce,address nftCollateralAddress,uint256 nftTokenId,address loanTokenAddress,uint256 loanAmount,uint256 interestFee,uint256 loanDuration)"
                         ),
                         data.lenderAddress,
                         data.lenderNonce,
@@ -73,7 +73,7 @@ contract EIP712SignMessage is EIP712{
                         data.nftTokenId,
                         data.loanTokenAddress,
                         data.loanAmount,
-                        data.repaymentAmount,
+                        data.interestFee,
                         data.loanDuration
                     )
                 )

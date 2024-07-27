@@ -9,9 +9,9 @@ contract Settings is Ownable, Pausable, ReentrancyGuard {
     mapping(address => bool) public erc20whitelist;
     mapping(address => bool) public erc721whitelist;
 
-    uint256 public lendmefiFee = 200; // 2% fee for LendmeFi platform.
+    uint256 public lendmeFiFeeBasisPoint = 200; // 2% fee for LendmeFi platform.
 
-    event LendmefiFeeChanged(uint256 newFee);
+    event LendmeFiFeeChanged(uint256 newFee);
 
     constructor(address _weth, address _usdc) Ownable(msg.sender) {
         erc20whitelist[_weth] = true;
@@ -19,8 +19,8 @@ contract Settings is Ownable, Pausable, ReentrancyGuard {
     }
 
     function setLendmefiFee(uint256 _fee) external onlyOwner {
-        lendmefiFee = _fee;
-        emit LendmefiFeeChanged(_fee);
+        lendmeFiFeeBasisPoint = _fee;
+        emit LendmeFiFeeChanged(_fee);
     }
 
     function setERC20Whitelist(
