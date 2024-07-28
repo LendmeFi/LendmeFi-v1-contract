@@ -38,37 +38,22 @@ describe("LendmeFi", function () {
         // settings = await Settings.deploy(await weth.getAddress(), await usdc.getAddress());
         // await settings.waitForDeployment();
 
+        // console.log(weth.target);
+        // console.log(await usdc.getAddress());
+
         // Deploy LendmeFi
         const LendmeFi = await ethers.getContractFactory("LendmeFi");
         lendmeFi = await LendmeFi.deploy(await weth.getAddress(), await usdc.getAddress());
         await lendmeFi.waitForDeployment();
 
+        //console.log(await lendmeFi.erc721whitelist(nft.getAddress()));
+
+        await lendmeFi.connect(owner).setERC721Whitelist(nft.getAddress(), true);
+
     });
 
 
-    async function signBorrowerData(borrower, eip712SignMessage, borrowerData) {
-        const domain = {
-            name: "LendmeFi",
-            version: "1",
-            chainId: (await ethers.provider.getNetwork()).chainId,
-            verifyingContract: eip712SignMessage.target
-        };
 
-        const types = {
-            BorrowerData: [
-                { name: "borrowerAddress", type: "address" },
-                { name: "borrowerNonce", type: "uint256" },
-                { name: "nftCollateralAddress", type: "address" },
-                { name: "nftTokenId", type: "uint256" },
-                { name: "loanTokenAddress", type: "address" },
-                { name: "loanAmount", type: "uint256" },
-                { name: "interestFee", type: "uint256" },
-                { name: "loanDuration", type: "uint256" }
-            ]
-        };
-
-        return await borrower.signTypedData(domain, types, borrowerData);
-    }
 
     async function signLenderData(lender, eip712SignMessage, lenderData) {
         const domain = {
@@ -94,7 +79,61 @@ describe("LendmeFi", function () {
         return await lender.signTypedData(domain, types, lenderData);
     }
 
+
+    // it("should verify borrower signature", async function () {
+    //     let borrowerNonce = 0;
+    //     const nftCollateralAddress = await nft.getAddress();
+    //     const nftTokenId = 1;
+    //     const loanTokenAddress = await weth.getAddress();
+    //     const loanAmount = ethers.parseEther("1");
+    //     const interestFee = ethers.parseEther("0.1");
+    //     const loanDuration = 3600;
+
+    //     // Borrower signs the loan data
+    //     const borrowerData = {
+    //         borrowerAddress: await borrower.getAddress(),
+    //         borrowerNonce: borrowerNonce,
+    //         nftCollateralAddress: nftCollateralAddress,
+    //         nftTokenId: nftTokenId,
+    //         loanTokenAddress: loanTokenAddress,
+    //         loanAmount: loanAmount,
+    //         interestFee: interestFee,
+    //         loanDuration: loanDuration
+    //     };
+
+    //     const signature = await signBorrowerData(borrower, eip712SignMessage, borrowerData);
+    //     const isValid = await eip712SignMessage.verifyBorrowerSignature(borrowerData, signature);
+    //     expect(isValid).to.be.true;
+    // });
+
     it("should start a loan directly", async function () {
+
+        async function signBorrowerData(borrower, eip712SignMessage, borrowerData) {
+
+            const domain = {
+                name: "LendmeFi",
+                version: "1",
+                chainId: 31337,
+                verifyingContract: eip712SignMessage.target
+            };
+
+            const types = {
+                BorrowerData: [
+                    { name: "borrowerAddress", type: "address" },
+                    { name: "borrowerNonce", type: "uint256" },
+                    { name: "nftCollateralAddress", type: "address" },
+                    { name: "nftTokenId", type: "uint256" },
+                    { name: "loanTokenAddress", type: "address" },
+                    { name: "loanAmount", type: "uint256" },
+                    { name: "interestFee", type: "uint256" },
+                    { name: "loanDuration", type: "uint256" }
+                ]
+            };
+
+            return await borrower.signTypedData(domain, types, borrowerData);
+        }
+
+        const borrowerAddress = await borrower.getAddress();
         let borrowerNonce = 0;
         let lenderNonce = 0;
         const nftCollateralAddress = await nft.getAddress();
@@ -106,7 +145,7 @@ describe("LendmeFi", function () {
 
         // Borrower signs the loan data
         const borrowerData = {
-            borrowerAddress: await borrower.getAddress(),
+            borrowerAddress: borrowerAddress,
             borrowerNonce: borrowerNonce,
             nftCollateralAddress: nftCollateralAddress,
             nftTokenId: nftTokenId,
@@ -118,19 +157,15 @@ describe("LendmeFi", function () {
 
         console.log(borrowerData);
 
+
         const borrowerSignature = await signBorrowerData(borrower, eip712SignMessage, borrowerData);
+        const isValid = await eip712SignMessage.verifyBorrowerSignature(borrowerData, borrowerSignature);
+        console.log(isValid);
 
         // Start the loan directly
         await lendmeFi.connect(lender).startLoanDirectly(
-            await borrower.getAddress(),
-            borrowerNonce,
+            borrowerData,
             lenderNonce,
-            nftCollateralAddress,
-            nftTokenId,
-            loanTokenAddress,
-            loanAmount,
-            interestFee,
-            loanDuration,
             borrowerSignature
         );
 

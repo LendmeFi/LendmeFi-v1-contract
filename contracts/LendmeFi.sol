@@ -135,9 +135,6 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
             "NFT not supported"
         );
 
-        _markNonceAsUsed(loan.borrowerAddress, _borrowerNonce);
-        _markNonceAsUsed(loan.lenderAddress, _lenderNonce);
-
         require(
             verifyBorrowerSignature(
                 BorrowerData(
@@ -154,6 +151,9 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
             ),
             "Invalid borrower signature"
         );
+
+        _markNonceAsUsed(loan.borrowerAddress, _borrowerNonce);
+        _markNonceAsUsed(loan.lenderAddress, _lenderNonce);
 
         loans[numberofTotalLoans] = loan;
 
