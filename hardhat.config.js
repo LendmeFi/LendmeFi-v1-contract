@@ -1,5 +1,6 @@
-require('@nomiclabs/hardhat-ethers');
-require('@nomiclabs/hardhat-etherscan');
+//require('@nomiclabs/hardhat-ethers');
+//require('@nomiclabs/hardhat-etherscan');
+require('@nomicfoundation/hardhat-toolbox');
 require('dotenv').config();
 
 const { PRIVATE_KEY, ETHERSCAN_API_KEY, PRIVATE_KEY2, PRIVATE_KEY3 } = process.env;
