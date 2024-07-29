@@ -30,7 +30,6 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
         uint256 lendmeFiFee;
         uint256 loanStartTime;
         uint256 loanDuration;
-        LoanStatus status;
     }
 
     event LoanStarted(
@@ -77,6 +76,8 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
 
     mapping(uint256 => Loan) public loans;
 
+    mapping(uint256 => LoanStatus) public loanStatus;
+
     uint256 public numberofTotalLoans = 0;
 
     uint256 public numberofActiveLoans = 0;
@@ -121,9 +122,10 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
             interestFee: _interestFee,
             lendmeFiFee: _lendmeFiFee,
             loanStartTime: block.timestamp,
-            loanDuration: _loanDuration,
-            status: LoanStatus.ACTIVE
+            loanDuration: _loanDuration
         });
+
+        loanStatus[numberofTotalLoans] = LoanStatus.ACTIVE;
 
         require(loan.loanDuration > 0, "Invalid loan duration");
         require(loan.loanAmount > 0, "Invalid loan amount");
@@ -217,9 +219,10 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
             interestFee: _interestFee,
             lendmeFiFee: _lendmeFiFee,
             loanStartTime: block.timestamp,
-            loanDuration: _loanDuration,
-            status: LoanStatus.ACTIVE
+            loanDuration: _loanDuration
         });
+
+        loanStatus[numberofTotalLoans] = LoanStatus.ACTIVE;
 
         require(loan.loanDuration > 0, "Invalid loan duration");
         require(loan.loanAmount > 0, "Invalid loan amount");
@@ -302,9 +305,9 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
     }
 
     function repayLoan(uint256 _loanId) external nonReentrant {
-        Loan storage loan = loans[_loanId];
+        Loan memory loan = loans[_loanId];
 
-        require(loan.status == LoanStatus.ACTIVE, "Loan is not active");
+        require(loanStatus[_loanId] == LoanStatus.ACTIVE, "Loan is not active");
 
         require(
             loan.borrowerAddress == msg.sender,
@@ -339,7 +342,7 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
             loan.nftTokenId
         );
 
-        loan.status = LoanStatus.REPAYED;
+        loanStatus[_loanId] = LoanStatus.REPAYED;
 
         numberofActiveLoans--;
 
@@ -361,9 +364,9 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
     }
 
     function liquidateLoan(uint256 _loanId) external nonReentrant {
-        Loan storage loan = loans[_loanId];
+        Loan memory loan = loans[_loanId];
 
-        require(loan.status == LoanStatus.ACTIVE, "Loan is not active");
+        require(loanStatus[_loanId] == LoanStatus.ACTIVE, "Loan is not active");
 
         require(
             loan.lenderAddress == msg.sender,
@@ -381,7 +384,7 @@ contract LendmeFi is Calculator, Settings, EIP712SignMessage, ERC721Holder {
             loan.nftTokenId
         );
 
-        loan.status = LoanStatus.LIQUIDATED;
+        loanStatus[_loanId] = LoanStatus.LIQUIDATED;
 
         numberofActiveLoans--;
 
