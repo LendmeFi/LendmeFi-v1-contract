@@ -730,4 +730,52 @@ describe("LendmeFi", function () {
         ).to.be.reverted;
     });
 
+    it("should fail to start a loan when lender 2 times start the loan", async function () {
+        let loanAmount = ethers.toBigInt(ethers.parseUnits("100", 18));
+        let interestFee = 1000;
+        let loanDuration = 3600;
+
+        // Borrower signs the loan data
+        const borrowerData = {
+            borrowerAddress: borrowerAddress,
+            borrowerNonce: borrowerNonce,
+            nftCollateralAddress: nftCollateralAddress,
+            nftTokenId: nftTokenId,
+            loanTokenAddress: loanTokenAddress,
+            loanAmount: loanAmount,
+            interestFee: interestFee,
+            loanDuration: loanDuration
+        };
+
+        const borrowerSignature = await signBorrowerData(borrower, borrowerData);
+
+        await lendmeFi.connect(lender).startLoanDirectly(
+            borrowerAddress,
+            borrowerNonce,
+            lenderNonce,
+            nftCollateralAddress,
+            nftTokenId,
+            loanTokenAddress,
+            loanAmount,
+            interestFee,
+            loanDuration,
+            borrowerSignature,
+        )
+
+        await expect(
+            lendmeFi.connect(lender).startLoanDirectly(
+                borrowerAddress,
+                borrowerNonce,
+                lenderNonce,
+                nftCollateralAddress,
+                nftTokenId,
+                loanTokenAddress,
+                loanAmount,
+                interestFee,
+                loanDuration,
+                borrowerSignature,
+            )
+        ).to.be.revertedWith("Nonce already used");
+    });
+
 });
