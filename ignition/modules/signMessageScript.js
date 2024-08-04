@@ -4,12 +4,14 @@ require('dotenv').config();
 
 
 
-const contractAddress = "0x6208bed3a300aac7fb50538cd43ce65b342dbc20";
+const contractAddress = "0x201c11d25F3590De65DD72177D1f4AD364da1d3e"; //scroll sepolia contract address
+const nftCollateralAddress = "0x0c35e6F690EC8cF99c4509a2055066dEb043DF96";
+const usdcAddress = "0x913efbB29E9C2E3045A082D39B36896D82268977";
 
 // RPC 
-const provider = new ethers.JsonRpcProvider("https://1rpc.io/sepolia");
+const provider = new ethers.JsonRpcProvider("https://sepolia-rpc.scroll.io/");
 
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey = process.env.PRIVATE_KEY2;
 const wallet = new ethers.Wallet(privateKey, provider);
 
 
@@ -17,58 +19,67 @@ const wallet = new ethers.Wallet(privateKey, provider);
 //const contract = new ethers.Contract(contractAddress, abi, provider);
 //const signer = contract.connect(wallet);
 
-const domain = {
-    name: "LendmeFi",
-    version: "1",
-    chainId: 11155111,
-    verifyingContract: contractAddress,
-};
+async function signBorrowerData(borrower, borrowerData) {
+    const domain = {
+        name: "LendmeFi",
+        version: "1",
+        chainId: 534351, // scroll sepolia chain id
+        verifyingContract: contractAddress
+    };
 
-const types = {
-    BorrowerData: [
-        { name: "borrowerAddress", type: "address" },
-        { name: "borrowerNonce", type: "uint256" },
-        { name: "nftCollateralAddress", type: "address" },
-        { name: "nftTokenId", type: "uint256" },
-        { name: "loanTokenAddress", type: "address" },
-        { name: "loanAmount", type: "uint256" },
-        { name: "interestFee", type: "uint256" },
-        { name: "loanDuration", type: "uint256" }
-    ]
-};
+    const types = {
+        BorrowerData: [
+            { name: "borrowerAddress", type: "address" },
+            { name: "borrowerNonce", type: "uint256" },
+            { name: "nftCollateralAddress", type: "address" },
+            { name: "nftTokenId", type: "uint256" },
+            { name: "loanTokenAddress", type: "address" },
+            { name: "loanAmount", type: "uint256" },
+            { name: "interestFee", type: "uint256" },
+            { name: "loanDuration", type: "uint256" }
+        ]
+    };
 
-let borrowerNonce = 3;
-const nftCollateralAddress = "0x58ad3dfd53299096751a5231bcac24f61c7b1f86";
-const nftTokenId = 0;
-const loanTokenAddress = "0xE0CB4cE84379B249adA5D40decc53D663212b9D3";
-const loanAmount = ethers.parseEther("0.000000000001");
-const interestFee = ethers.parseEther("0.0000000000001");
-const loanDuration = 150;
-//10000000000000000
-//10000000000000000
-//1000000000000
+    return await borrower.signTypedData(domain, types, borrowerData);
+}
 
 // Borrower signs the loan data
 const borrowerData = {
     borrowerAddress: wallet.address,
-    borrowerNonce: borrowerNonce,
+    borrowerNonce: 0,
     nftCollateralAddress: nftCollateralAddress,
-    nftTokenId: nftTokenId,
-    loanTokenAddress: loanTokenAddress,
-    loanAmount: loanAmount,
-    interestFee: interestFee,
-    loanDuration: loanDuration
+    nftTokenId: 0,
+    loanTokenAddress: usdcAddress,
+    loanAmount: ethers.parseEther("100"),
+    interestFee: ethers.parseEther("25"),
+    loanDuration: 360000 // 100 hours
 };
 
 
-async function isSignatureValid() {
-    const signature = await wallet.signTypedData(domain, types, borrowerData);
+
+async function main() {
+    const signature = await signBorrowerData(wallet, borrowerData);
     console.log("Signature:", signature);
 }
 
-console.log(borrowerData);
+main()
 
-// ["0xb5ce51798dB5bFc62031Cf0ead243e9948C62aAa","1","0x58ad3dfd53299096751a5231bcac24f61c7b1f86","2","0xaefa96f81054013d8d7936737ebbcc24d3887423","1000000000000000000","100000000000000000","3600"]
+// Example for Remix IDE: ["0xb5ce51798dB5bFc62031Cf0ead243e9948C62aAa","1","0x58ad3dfd53299096751a5231bcac24f61c7b1f86","2","0xaefa96f81054013d8d7936737ebbcc24d3887423","1000000000000000000","100000000000000000","3600"]
 
 
-isSignatureValid();
+/* for Scroll Sepolia SIGNATUE_1: 0xf6cbc545e3bcf400f432e19bbc80927eb549009feec65e8da7398531bd4e5fef0691e7be8cf208a52f145170a3436b7e7d28035ce1128ee7264ec202ef8fe9ff1c
+
+const borrowerData = {
+    borrowerAddress: wallet.address,
+    borrowerNonce: 0,
+    nftCollateralAddress: nftCollateralAddress,
+    nftTokenId: 0,
+    loanTokenAddress: usdcAddress,
+    loanAmount: ethers.parseEther("100"),
+    interestFee: ethers.parseEther("25"),
+    loanDuration: 360000 // 100 hours
+};
+
+
+
+*/

@@ -3,7 +3,7 @@
 require('@nomicfoundation/hardhat-toolbox');
 require('dotenv').config();
 
-// The contract is verified on Scroll Sepolia testnet: https://sepolia.scrollscan.com/address/0x201c11d25F3590De65DD72177D1f4AD364da1d3e#code
+// The LendmeFi contract is verified on Scroll Sepolia testnet: https://sepolia.scrollscan.com/address/0x201c11d25F3590De65DD72177D1f4AD364da1d3e#code
 // WETH : https://sepolia.scrollscan.com/address/0xC100a0179319ae61F6751815991a0D427012A434#code
 // USDC : https://sepolia.scrollscan.com/address/0x913efbB29E9C2E3045A082D39B36896D82268977#code
 // NFT1 : https://sepolia.scrollscan.com/address/0x0c35e6F690EC8cF99c4509a2055066dEb043DF96#code
